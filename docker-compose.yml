@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  presence_test:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./.env:/app/.env
+      - ./presence_test.session:/app/presence_test.session
+      - ./presence_test.db:/app/presence_test.db
