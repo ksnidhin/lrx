@@ -82,6 +82,11 @@ async def keep_online_task(client):
             if 0 <= now_ist.minute < 20:
                 print(f"[{now_ist.strftime('%H:%M')}] IST: Within first 20 mins. Setting status to Online.")
                 await client(functions.account.UpdateStatusRequest(offline=False))
+                # Simulate opening the app to strictly force Telegram to show the Online badge
+                try:
+                    await client.get_dialogs(limit=1)
+                except Exception:
+                    pass
                 # Ping every 3 minutes to keep the "Online" status alive
                 await asyncio.sleep(3 * 60)
             else:
