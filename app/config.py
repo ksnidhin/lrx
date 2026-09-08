@@ -1,14 +1,8 @@
-import os
+﻿import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-API_ID = int(os.environ.get('API_ID', '12345'))
-API_HASH = os.environ.get('API_HASH', 'dummy_hash')
-SESSION_NAME = os.environ.get('SESSION_NAME', 'presence_test')
-
-BOT_TOKEN = os.environ.get('BOT_TOKEN', '')
-ADMIN_CHAT_ID = int(os.environ.get('ADMIN_CHAT_ID', '0'))
-
-TIMEZONE = os.environ.get('TIMEZONE', 'Asia/Kolkata')
-DATABASE_PATH = os.environ.get('DATABASE_PATH', 'presence_test.db')
+API_ID = int(os.getenv("API_ID", "0"))
+API_HASH = os.getenv("API_HASH", "")
+SESSION_NAME = os.getenv("SESSION_NAME", "userbot_session")

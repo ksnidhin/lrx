@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 
 # Setup event loop before importing Telethon to satisfy Python 3.14+ requirements
 try:
@@ -7,32 +7,18 @@ except RuntimeError:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-from .database import init_db
-from .telegram_client import client
-from .bot import bot
-from .config import BOT_TOKEN
-from .presence import tracker
+from .telegram_client import client, keep_online_task
 
 async def main():
-    await init_db()
-    await tracker.recover()
-    print("Database initialized and previous state recovered.")
-    
-    # Start bot
-    if BOT_TOKEN:
-        await bot.start(bot_token=BOT_TOKEN)
-        print("Admin bot started.")
-    
-    # Start user client
+    print("Starting Userbot Client...")
     await client.start()
-    print("User client started. Listening for presence updates...")
+    print("Userbot started successfully.")
     
-    from .telegram_client import keep_online_task
-
-    # Run everything indefinitely
+    print("Starting IST Online Scheduler...")
+    
+    # Run indefinitely
     await asyncio.gather(
         client.run_until_disconnected(),
-        bot.run_until_disconnected() if BOT_TOKEN else asyncio.sleep(0),
         keep_online_task(client)
     )
 
