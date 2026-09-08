@@ -1,5 +1,5 @@
-﻿from telethon import TelegramClient, events, functions
-from .config import API_ID, API_HASH, SESSION_NAME
+from telethon import TelegramClient, events, functions
+from .config import API_ID, API_HASH, SESSION_NAME, LOG_GROUP_ID
 import os
 import re
 from datetime import datetime
@@ -59,6 +59,16 @@ async def scramble_game_handler(event):
                 print(f"💡 Groq Solved it: {clean_answer}. Sending to group!")
                 
                 await event.client.send_message(event.chat_id, clean_answer)
+                
+                # Send log to log group
+                if LOG_GROUP_ID:
+                    try:
+                        chat = await event.get_chat()
+                        chat_title = getattr(chat, 'title', str(event.chat_id))
+                        log_text = f"✅ **Solved Scrambled Word!**\n\n**Group:** `{chat_title}`\n**Word:** `{scrambled_word}`\n**Answer:** `{clean_answer}`"
+                        await event.client.send_message(LOG_GROUP_ID, log_text)
+                    except Exception as e:
+                        print(f"⚠️ Failed to send log: {e}")
 
 async def keep_online_task(client):
     """
