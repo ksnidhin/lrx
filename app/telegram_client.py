@@ -35,3 +35,57 @@ async def handler(event):
     elif isinstance(event.status, UserStatusOffline):
         await tracker.handle_status_change(user_id, "OFFLINE", name)
     # Vague states are ignored per requirements
+
+import os
+import re
+
+try:
+    from groq import AsyncGroq
+except ImportError:
+    AsyncGroq = None
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+if AsyncGroq and GROQ_API_KEY:
+    groq_client = AsyncGroq(api_key=GROQ_API_KEY)
+else:
+    groq_client = None
+
+async def solve_scrambled_word(scrambled: str) -> str:
+    if not groq_client:
+        print("⚠️ Groq client not initialized. Install 'groq' package and set GROQ_API_KEY.")
+        return ""
+        
+    try:
+        completion = await groq_client.chat.completions.create(
+            model="groq/compound-mini",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "You are a highly advanced anagram solver. The user will give you a scrambled sequence of letters. Respond with EXACTLY ONE unscrambled dictionary word in lowercase. Do not include any punctuation, spaces, quotes, or conversational text. Just the single word."
+                },
+                {"role": "user", "content": scrambled}
+            ],
+            temperature=0.0,
+            max_tokens=15
+        )
+        return completion.choices[0].message.content.strip().lower()
+    except Exception as e:
+        print(f"⚠️ Groq API Error: {e}")
+        return ""
+
+@client.on(events.NewMessage(func=lambda e: e.is_group and not e.out))
+async def scramble_game_handler(event):
+    text = event.message.message or ""
+    
+    if "Scrambled Word Challenge!" in text and "Word:" in text:
+        match = re.search(r"Word:\s*([A-Za-z]+)", text)
+        if match:
+            scrambled_word = match.group(1)
+            print(f"🧩 Detected scramble game! Word: {scrambled_word}")
+            
+            answer = await solve_scrambled_word(scrambled_word)
+            if answer:
+                clean_answer = re.sub(r"[^a-z]", "", answer)
+                print(f"💡 Groq Solved it: {clean_answer}. Sending to group!")
+                
+                await event.client.send_message(event.chat_id, clean_answer)
