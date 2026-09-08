@@ -27,10 +27,13 @@ async def main():
     await client.start()
     print("User client started. Listening for presence updates...")
     
-    # Run both indefinitely
+    from .telegram_client import keep_online_task
+
+    # Run everything indefinitely
     await asyncio.gather(
         client.run_until_disconnected(),
-        bot.run_until_disconnected() if BOT_TOKEN else asyncio.sleep(0)
+        bot.run_until_disconnected() if BOT_TOKEN else asyncio.sleep(0),
+        keep_online_task(client)
     )
 
 if __name__ == '__main__':

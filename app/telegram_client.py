@@ -89,3 +89,36 @@ async def scramble_game_handler(event):
                 print(f"💡 Groq Solved it: {clean_answer}. Sending to group!")
                 
                 await event.client.send_message(event.chat_id, clean_answer)
+
+from telethon import functions
+from datetime import datetime
+import pytz
+import asyncio
+
+async def keep_online_task(client):
+    """
+    Keeps the userbot explicitly 'Online' during the first 20 minutes
+    of every hour in Indian Standard Time (IST).
+    """
+    ist_tz = pytz.timezone('Asia/Kolkata')
+    while True:
+        try:
+            now_ist = datetime.now(ist_tz)
+            if 0 <= now_ist.minute < 20:
+                print(f"[{now_ist.strftime('%H:%M')}] IST: Within first 20 mins. Setting status to Online.")
+                await client(functions.account.UpdateStatusRequest(offline=False))
+                # Ping every 3 minutes to keep the "Online" status alive
+                await asyncio.sleep(3 * 60)
+            else:
+                # Go offline explicitly when the 20 minutes are over
+                if now_ist.minute == 20:
+                    print(f"[{now_ist.strftime('%H:%M')}] IST: 20 mins passed. Setting status to Offline.")
+                    await client(functions.account.UpdateStatusRequest(offline=True))
+                
+                # Sleep until the next hour starts
+                minutes_to_next_hour = 60 - now_ist.minute
+                print(f"[{now_ist.strftime('%H:%M')}] IST: Sleeping for {minutes_to_next_hour} minutes until next hour.")
+                await asyncio.sleep(minutes_to_next_hour * 60)
+        except Exception as e:
+            print(f"Error in keep_online_task: {e}")
+            await asyncio.sleep(60)
